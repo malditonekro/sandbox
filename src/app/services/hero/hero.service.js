@@ -16,6 +16,7 @@ var HeroService = (function () {
     function HeroService(http) {
         this.http = http;
         this.heroesUrl = 'api/heroes';
+        this.headers = new http_1.Headers({ 'Content-Type': 'application/json' });
     }
     // GET /heroes
     HeroService.prototype.getHeroes = function () {
@@ -29,8 +30,11 @@ var HeroService = (function () {
         return Promise.reject(error.message || error);
     };
     HeroService.prototype.getHero = function (id) {
-        return this.getHeroes()
-            .then(function (heroes) { return heroes.find(function (hero) { return hero.id === id; }); });
+        var url = this.heroesUrl + "/" + id;
+        return this.http.get(url)
+            .toPromise()
+            .then(function (response) { return response.json().data; })
+            .catch(this.handleError);
     };
     HeroService.prototype.getHeroesSlowly = function () {
         var _this = this;
@@ -38,6 +42,28 @@ var HeroService = (function () {
             // Simulate server latency with 2 second delay
             setTimeout(function () { return resolve(_this.getHeroes()); }, 2000);
         });
+    };
+    HeroService.prototype.update = function (hero) {
+        var url = this.heroesUrl + "/" + hero.id;
+        return this.http
+            .put(url, JSON.stringify(hero), { headers: this.headers })
+            .toPromise()
+            .then(function () { return hero; })
+            .catch(this.handleError);
+    };
+    HeroService.prototype.create = function (name) {
+        return this.http
+            .post(this.heroesUrl, JSON.stringify({ name: name }), { headers: this.headers })
+            .toPromise()
+            .then(function (res) { return res.json().data; })
+            .catch(this.handleError);
+    };
+    HeroService.prototype.delete = function (id) {
+        var url = this.heroesUrl + "/" + id;
+        return this.http.delete(url, { headers: this.headers })
+            .toPromise()
+            .then(function () { return null; })
+            .catch(this.handleError);
     };
     HeroService = __decorate([
         core_1.Injectable(), 
